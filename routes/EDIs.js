@@ -9,12 +9,13 @@ const FTP = require('../public/ftp');
 // ==========================================
 // Crear nuevo EDI
 // ==========================================
-app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
+app.post('/create/', mdAutenticacion.verificaToken, (req, res) => {
   var ok = false;
   var body = req.body;
   var rutaCompleta = req.query.ruta;
   var nombreArchivo = `${uuid()}.txt`;
   rutaCompleta += nombreArchivo;
+
   var edi = new EDI({
     noReferencia: req.query.noReferencia,
     edi: req.query.edi,
@@ -23,38 +24,14 @@ app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
     naviera: req.query.naviera,
     usuarioAlta: req.usuario._id,
     fAlta: new Date()
-  });
-
-
-  var EasyFtp = require("easy-ftp");
-  var ftp = new EasyFtp();
-
-  const config = {
-    host: "127.0.0.1",
-    type: "FTP",
-    port: "21",
-    username: "javi",
-    password: "javi08"
-  };
-
-  ftp.connect(config);
-  console.log('FTP CONNECTED:' + ftp.client.isConnect)
-
-  // ftp.mkdir("/Test_MYT", function (err) {
-  //       if (err)
-  //           console.log(err);
-  //   });
+  }); 
 
   fs.writeFile(edi.ruta, edi.edi, function (err) {
     if (err)
       throw err;
   });
 
-
-  ftp.upload(rutaCompleta, "/Test_MYT/" + nombreArchivo)
-
-
-
+  FTP.UploadFile(req.query.ruta, nombreArchivo);
 
   edi.save((err, EDIGuardado) => {
     if (err) {
@@ -69,6 +46,17 @@ app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
       ok: true,
       EDI: EDIGuardado
     });
+  });
+});
+
+app.put('/delete/', mdAutenticacion.verificaToken, (req, res) => {
+  var ruta = '/Test_MYT/';
+  var nombreArchivo =  req.query.nombreArchivo;
+
+  FTP.DeleteFile(nombreArchivo)
+
+  res.status(201).json({
+    ok: true
   });
 });
 

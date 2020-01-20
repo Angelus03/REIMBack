@@ -10,19 +10,20 @@ var ftp = new EasyFtp();
 // };
 
 const config = {
-    host:"127.0.0.1",
-    type:"FTP",
-    port:"21",
-    username:"javi",
-    password:"javi08"
-    };
+    host: "127.0.0.1",
+    type: "FTP",
+    port: "21",
+    username: "javi",
+    password: "javi08"
+};
 
 
-// function Connect() {
-//     ftp.connect(config);
-// }
+exports.UploadFile = function UploadFile(ruta, nombreArchivo) {
+    ftp.connect(config);
+    console.log('FTP CONNECTED:' + ftp.client.isConnect)
 
-exports.EnviaArchivo = function EnviaArchivo(rutaArchivo) {
+    ftp.upload(ruta + nombreArchivo, "/Test_MYT/" + nombreArchivo)
+
     // ftp.on('open', function () {
     //     // ftp.upload(csvName, "/csvs/", function (err) {
     //     //   // process upload result
@@ -40,11 +41,6 @@ exports.EnviaArchivo = function EnviaArchivo(rutaArchivo) {
     // });
 
 
-    
-    ftp.connect(config);
-
-    
-    
     // ftp.upload("C:\EDIs\Out\javi.txt", "/javi.txt")
     // .then(console.log)
     // .catch(console.error)
@@ -59,7 +55,11 @@ exports.EnviaArchivo = function EnviaArchivo(rutaArchivo) {
     ftp.close();
 }
 
-// ftp.upload("/test/test.txt", "/test.txt", function(err){
-// if (err) throw err;
-// ftp.close();
-// });
+// exports.DeleteFile = function DeleteFile(nombreArchivo) {
+//     ftp.connect(config);
+//     console.log('FTP CONNECTED:' + ftp.client.isConnect)
+
+//     ftp.rm("/Test_MYT/212c6100-3bd9-11ea-99ba-4165eb4b23a1.txt", function(err){});
+
+//     ftp.close();
+// }
