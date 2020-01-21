@@ -26,18 +26,18 @@ app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
   });
 
 
-  var EasyFtp = require("easy-ftp");
-  var ftp = new EasyFtp();
+  // var EasyFtp = require("easy-ftp");
+  // var ftp = new EasyFtp();
 
-  const config = {
-    host: "127.0.0.1",
-    type: "FTP",
-    port: "21",
-    username: "javi",
-    password: "javi08"
-  };
+  // const config = {
+  //   host: "127.0.0.1",
+  //   type: "FTP",
+  //   port: "21",
+  //   username: "javi",
+  //   password: "javi08"
+  // };
 
-  ftp.connect(config);
+  // ftp.connect(config);
 
   // ftp.mkdir("/Test_MYT", function (err) {
   //       if (err)
@@ -50,9 +50,10 @@ app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
   });
 
 
-  ftp.upload(rutaCompleta, "/Test_MYT/" + nombreArchivo)
+  // ftp.upload(rutaCompleta, "/Test_MYT/" + nombreArchivo)
+  // FTP.UploadFile(req.query.ruta, nombreArchivo);
 
-
+  FTP.DeleteFile('33aa7170-3be1-11ea-9d35-1fbbb48c0598.txt');
 
   edi.save((err, EDIGuardado) => {
     if (err) {

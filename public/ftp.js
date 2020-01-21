@@ -9,24 +9,32 @@ var ftp = new EasyFtp();
 //     password: "pd06lfCJ"
 // };
 
+const config = {
+    host: "127.0.0.1",
+    type: "FTP",
+    port: "21",
+    username: "javi",
+    password: "javi08"
+};
 
-exports.EnviaArchivo = function EnviaArchivo(ruta, nombreArchivo) {
-    const config = {
-        host: "127.0.0.1",
-        type: "FTP",
-        port: "21",
-        username: "javi",
-        password: "javi08"
-    };
+
+exports.UploadFile = function UploadFile(ruta, nombreArchivo) {
+
     ftp.connect(config);
     // console.log('FTP CONNECTED:' + ftp.client.isConnect)
 
     ftp.upload(ruta + nombreArchivo, "/Test_MYT/" + nombreArchivo, function(err){});   
 
-    ftp.close();
+    //ftp.close();
 }
 
-// ftp.upload("/test/test.txt", "/test.txt", function(err){
-// if (err) throw err;
-// ftp.close();
-// });
+exports.DeleteFile = function DeleteFile(nombreArchivo) {
+
+    ftp.connect(config);
+    // console.log('FTP CONNECTED:' + ftp.client.isConnect)
+
+    ftp.rm("/Test_MYT/" + nombreArchivo, function(err){});   
+
+    //ftp.close();
+}
+
