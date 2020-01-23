@@ -59,7 +59,7 @@ app.get('/:viaje?:buque?:finiarribo?:ffinarribo?', (req, res, next) => {
 //  Obtener viaje por ID
 // ==========================================
 app.get('/viaje/:id', (req, res) => {
-  var id = req.params.id;
+  var id = req.req.id;
   Viaje.findById(id)
     .exec((err, viaje) => {
       if (err) {
