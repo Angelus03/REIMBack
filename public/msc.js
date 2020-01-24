@@ -1,4 +1,6 @@
 const varias = require('../public/varias');
+const sentMail = require('../routes/sendAlert');
+var correosTI = require('../config/config').correosTI;
 
 ////////////////////////////////////////////////////////////////////////
 ////                            VARIABLES                           ////
@@ -12,13 +14,15 @@ var d = new Date(),
     min = d.getMinutes();
 
 var fechaEnvio = year.toString().substring(2, year.toString().length) + varias.zFill(month, 2) + day;
-var fechaEnvioYYYY = year.toString() + varias.zFill(month, 2) + day;
-var horaEnvio = hr.toString() + min.toString();
+var fechaEnvioYYYY = year.toString() + varias.zFill(month, 2) + varias.zFill(day, 2);
+var horaEnvio = varias.zFill(hr.toString(), 2) + varias.zFill(min.toString(), 2);
 
 const TIPOS_CONTENEDOR = {
     tipos: [{ tipo: '20 DC', codigoISO: "22G1" },
     { tipo: '40 DC', codigoISO: "42G1" },
+    { tipo: '40 HC/HQ', codigoISO: "45G1" },
     { tipo: '40 HC', codigoISO: "45G1" },
+    { tipo: '40 HQ', codigoISO: "45G1" },
     { tipo: '20 HC', codigoISO: "" },
     { tipo: '20 RF', codigoISO: "22R1" },
     { tipo: '40 RF', codigoISO: "42R0" },
@@ -36,10 +40,10 @@ const TIPOS_CONTENEDOR = {
 ////                        CREA EDI CODECO                         ////
 ////////////////////////////////////////////////////////////////////////
 
-exports.CreaCODECO = function CreaCODECO(maniobra) {
+exports.CreaCODECO = function CreaCODECO(maniobra, referenceNumber) {
     var cadenaCODECO = '';
-    var ID = 8888;
-    var CodigoISO;
+    var ID = referenceNumber;
+    var codigoISO;
     var IE;
     var FE;
     var booking;
@@ -47,12 +51,13 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
     var codeListQualifier;
     var ok;
     var marca;
+    var error = false;
 
     for (var i = 0; i < TIPOS_CONTENEDOR.tipos.length; i++) {
         // console.log('TIPOS_CONTENEDOR ' + TIPOS_CONTENEDOR.tipos[i].tipo)
         // console.log('CODIGO ISO ' + TIPOS_CONTENEDOR.tipos[i].codigoISO)
         if (TIPOS_CONTENEDOR.tipos[i].tipo.toString() == maniobra.tipo) {
-            CodigoISO = TIPOS_CONTENEDOR.tipos[i].codigoISO.toString();
+            codigoISO = TIPOS_CONTENEDOR.tipos[i].codigoISO.toString();
         }
     }
 
@@ -108,9 +113,82 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
         marca = 'MERCHANT';
     }
 
-    // console.log(IE)
-    // console.log(IE = '3' ? 'IMPORT' : 'EXPORT')
-    // console.log('CARGA-DESCARGA: ' + maniobra.cargaDescarga)
+    ////////////////////////////////////// VALIDO SI TIENE ERRORES//////////////////////////////////////////
+    var cuerpoCorreo;
+    cuerpoCorreo = `No se pudo generar la cadena para mensaje EDI CODECO, debido a los siguientes errores:
+    `;
+
+    if (codigoISO == undefined || codigoISO == '') {
+        cuerpoCorreo += `
+        • Codigo ISO = (${codigoISO})`;
+        error = true;
+    }
+
+    if (IE == undefined || IE == '' || (IE != '2' && IE != '3')) {
+        cuerpoCorreo += `   
+        • Import - Export = (${IE})`;
+        error = true;
+    }
+
+    if (FE == undefined || FE == '' || (FE != '4' && FE != '5')) {
+        cuerpoCorreo += `   
+        • Full - Empty = (${FE})`;
+        error = true;
+    }
+
+    if ((booking == undefined || booking == '') && IE == '2') {
+        cuerpoCorreo += `   
+        • Booking = (${booking})`;
+        error = true;
+    }
+
+    if (freeTextCode == undefined || freeTextCode == '' || (freeTextCode != '10' && freeTextCode != 'OK')) {
+        cuerpoCorreo += `   
+        • FreeTextCode (10/OK) = (${freeTextCode})`;
+        error = true;
+    }
+
+    if (codeListQualifier == undefined || (codeListQualifier != 'NA' && codeListQualifier != '')) {
+        cuerpoCorreo += `   
+        • codeListQualifier (''/NA) = (${codeListQualifier})`;
+        error = true;
+    }
+
+    if (ok == undefined || ok == '' || (ok != 'GC' && ok != 'D')) {
+        cuerpoCorreo += `   
+        • ok (GC/D) = (${ok})`;
+        error = true;
+    }
+
+    if (marca == undefined || marca == '' || (marca != 'MERCHANT' && marca != 'CARRIER')) {
+        cuerpoCorreo += `   
+        • Marca = (${marca})`;
+        error = true;
+    }
+
+
+
+    if (error) {
+        cuerpoCorreo += `
+
+    ========== DATOS DE MANIOBRA ==========
+
+    Refence Number (ID) : ${referenceNumber}
+    IdManiobra : ${maniobra._id}
+    Estatus : ${maniobra.estatus}
+    Carga-Descarga : ${maniobra.cargaDescarga}
+    Contenedor : ${maniobra.contenedor ? maniobra.contenedor : ''}
+    Tipo : ${maniobra.tipo}
+    Peso : ${maniobra.peso}
+    `;
+
+    sentMail('Compañero de TI', correosTI, 'Error CODECO - Reference Number : ' + referenceNumber, cuerpoCorreo, 'emailAlert');
+
+    return cadenaCODECO;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     if (maniobra) {
 
         var CODECO = {
@@ -164,7 +242,7 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
                     Equipment_Identification_Number: maniobra.contenedor
                 },
                 EQUIPMENT_SIZE_AND_TYPE: {
-                    Equipment_Size_And_Type_Identification: CodigoISO,
+                    Equipment_Size_And_Type_Identification: codigoISO,
                     Code_List_Qualifier: "102",
                     Code_List_Responsible_Agency_Coded: "5"
                 },
@@ -193,7 +271,7 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
                     Code_List_Qualifier: codeListQualifier,
                     Code_List_Responsible_Agency_Coded: "184"
                 },
-                TEXT_LITERAL: "JAVI"
+                TEXT_LITERAL: "" // Se llena en base a si tiene daño o no en el foreach de reparaciones
             },
             DAM: {
                 DAMAGE_DETAILS_QUALIFIER: "1",
@@ -201,7 +279,7 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
                     Type_Of_Damage_Coded: "NA",
                     Code_List_Qualifier: "",
                     Code_List_Responsible_Agency_Coded: ""
-                    //Type_Of_Damage: "JAVI" //35 caracteres SE LLENARA DIRECTO DE MANIOBRA.REPARACIONES
+                    //Type_Of_Damage: "" //35 caracteres SE LLENARA DIRECTO DE MANIOBRA.REPARACIONES
                 }
             },
             TDT: {
@@ -261,17 +339,17 @@ exports.CreaCODECO = function CreaCODECO(maniobra) {
             });
         }
 
-        cadenaCODECO += 'TDT+' + CODECO.TDT.TRANSPORT_STAGE_QUALIFIER + '+' + CODECO.TDT.CONVEYANCE_REFERENCE_NUMBER + '+' + CODECO.TDT.MODE_OF_TRANSPORT.Mode_Of_Transport_Code + '+' +  CODECO.TDT.TRANSPORT_MEANS.Type_Of_Means_Of_Transport_Identification + '+' +  CODECO.TDT.CARRIER + '+' +  CODECO.TDT.TRANSIT_DIRECTION_CODED + '+' + CODECO.TDT.EXCESS_TRANSPORTATION_INFORMATION + '+' +  CODECO.TDT.TRANSPORT_IDENTIFICATION + "'" + '\n' +
-        'CNT+' + CODECO.CNT.CONTROL.Control_Qualifier + ':' + CODECO.CNT.CONTROL.Control_Value + "'" + '\n';
+        cadenaCODECO += 'TDT+' + CODECO.TDT.TRANSPORT_STAGE_QUALIFIER + '+' + CODECO.TDT.CONVEYANCE_REFERENCE_NUMBER + '+' + CODECO.TDT.MODE_OF_TRANSPORT.Mode_Of_Transport_Code + '+' + CODECO.TDT.TRANSPORT_MEANS.Type_Of_Means_Of_Transport_Identification + '+' + CODECO.TDT.CARRIER + '+' + CODECO.TDT.TRANSIT_DIRECTION_CODED + '+' + CODECO.TDT.EXCESS_TRANSPORTATION_INFORMATION + '+' + CODECO.TDT.TRANSPORT_IDENTIFICATION + "'" + '\n' +
+            'CNT+' + CODECO.CNT.CONTROL.Control_Qualifier + ':' + CODECO.CNT.CONTROL.Control_Value + "'" + '\n';
 
         var contadorSegmentos = [];
 
-        for(var i = 0; i < cadenaCODECO.length; i++) {
+        for (var i = 0; i < cadenaCODECO.length; i++) {
             if (cadenaCODECO[i].toLowerCase() === "\n") contadorSegmentos.push(i);
         }
 
         cadenaCODECO += 'UNT+' + contadorSegmentos.length + ':' + CODECO.UNT.MESSAGE_REFERENCE_NUMBER + "'" + '\n' +
-        'UNZ+' + CODECO.UNZ.INTERCHANGE_CONTROL_COUNT + ':' + CODECO.UNZ.INTERCHANGE_CONTROL_REFERENCE + "'" ;
+            'UNZ+' + CODECO.UNZ.INTERCHANGE_CONTROL_COUNT + '+' + CODECO.UNZ.INTERCHANGE_CONTROL_REFERENCE + "'";
 
         return cadenaCODECO;
     }

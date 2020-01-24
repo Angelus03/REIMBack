@@ -12,6 +12,7 @@ var maniobraSchema = new Schema({
   destinatario: { type: String, required: false },
   sello: { type: String},
   agencia: { type: Schema.Types.ObjectId, ref: 'Cliente' },
+  naviera: { type: Schema.Types.ObjectId, ref: 'Cliente' },
   transportista: { type: Schema.Types.ObjectId, ref: 'Cliente' },
   camion: { type: Schema.Types.ObjectId, ref: 'Camion' },
   operador: { type: Schema.Types.ObjectId, ref: 'Operador' },
