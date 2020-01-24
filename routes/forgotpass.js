@@ -27,7 +27,6 @@ var smtpTransport = nodemailer.createTransport({
     }
 });
 
-console.log(smtpTransport)
 var handlebarsOptions = {
     viewEngine: 'handlebars',
     viewPath: path.resolve('./templates/'),
