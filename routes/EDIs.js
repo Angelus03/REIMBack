@@ -4,7 +4,6 @@ var mongoose = require('mongoose');
 var mdAutenticacion = require('../middlewares/autenticacion');
 var app = express();
 var EDI = require('../models/EDI');
-var uuid = require('uuid/v1');
 const MSC = require('../public/msc');
 var Maniobra = require('../models/maniobra');
 const varias = require('../public/varias');
@@ -56,11 +55,20 @@ app.post('/nuevo/', mdAutenticacion.verificaToken, (req, res) => {
 //  Crea Cadena CODECO
 // ==========================================
 app.get('/CODECO/', (req, res) => {
+
+  var d = new Date(),
+    month = '' + (d.getMonth() + 1),
+    day = '' + d.getDate(),
+    year = d.getFullYear(),
+    hr = d.getHours(),
+    min = d.getMinutes();
+
+  var fechaEnvioYYYY = year.toString() + varias.zFill(month, 2) + varias.zFill(day, 2);
+  var horaEnvio = varias.zFill(hr.toString(), 2) + varias.zFill(min.toString(), 2);
+
   var idManiobra = req.query.maniobra;
   var referenceNumber = req.query.referenceNumber;
   var rutaCompleta = req.query.ruta;
-  var nombreArchivo = `${uuid()}.txt`;
-  rutaCompleta += nombreArchivo;
 
   Maniobra.findById(idManiobra)
     .populate('solicitud', '_id blBooking facturarA')
@@ -88,7 +96,21 @@ app.get('/CODECO/', (req, res) => {
           var contenidoEDI = MSC.CreaCODECO(maniobra, referenceNumber)
 
           if (contenidoEDI != '') {
-            varias.creaArchivoTXT(rutaCompleta, contenidoEDI.replace('\n', ''));
+            var gate = 'Gate-';
+
+            if (maniobra.cargaDescarga == 'D') {
+              gate += 'In';
+            } else {
+              if (maniobra.cargaDescarga == 'C') {
+                gate += 'Out';
+              }
+            }
+
+            var nombreArchivo = gate + '_MXPGOAB_' + fechaEnvioYYYY + horaEnvio + '_' + referenceNumber + '.txt';
+            rutaCompleta += nombreArchivo;
+
+
+            varias.creaArchivoTXT(rutaCompleta, contenidoEDI.replace(/\n/g, '').trim());
           } else {
             return res.status(400).json({
               ok: false,

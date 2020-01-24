@@ -335,7 +335,7 @@ exports.CreaCODECO = function CreaCODECO(maniobra, referenceNumber) {
 
         if (maniobra.reparaciones && maniobra.reparaciones.length > 0) {
             maniobra.reparaciones.forEach(r => {
-                cadenaCODECO += 'DAM+' + CODECO.DAM.DAMAGE_DETAILS_QUALIFIER + '+' + CODECO.DAM.TYPE_OF_DAMAGE.Type_Of_Damage_Coded + ':' + CODECO.DAM.TYPE_OF_DAMAGE.Code_List_Qualifier + ':' + CODECO.DAM.TYPE_OF_DAMAGE.Code_List_Responsible_Agency_Coded + ':' + r.reparacion + "'" + '\n';
+                cadenaCODECO += 'DAM+' + CODECO.DAM.DAMAGE_DETAILS_QUALIFIER + '+' + CODECO.DAM.TYPE_OF_DAMAGE.Type_Of_Damage_Coded + ':' + CODECO.DAM.TYPE_OF_DAMAGE.Code_List_Qualifier + ':' + CODECO.DAM.TYPE_OF_DAMAGE.Code_List_Responsible_Agency_Coded + ':' + r.reparacion.substring(0,35).trim() + "'" + '\n';
             });
         }
 
