@@ -21,7 +21,7 @@
     "download": "^7.1.0",
     "easy-ftp": "^0.4.1",
     "express": "^4.17.1",
-    "express-fileupload": "^0.4.0",
+    "express-fileupload": "^1.1.9",
     "fast-csv": "^2.4.1",
     "jshint": "^2.10.2",
     "json2csv": "^4.3.5",
