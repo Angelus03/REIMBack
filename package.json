@@ -32,7 +32,7 @@
     "no-gyp-xml-stream": "^1.0.3",
     "node-openssl-cert": "^0.1.7",
     "node-xml-stream": "^1.0.2",
-    "nodemailer": "^4.7.0",
+    "nodemailer": "^6.4.16",
     "nodemailer-express-handlebars": "^3.0.0",
     "nodemon": "^2.0.7",
     "pdfmake": "^0.1.65",
